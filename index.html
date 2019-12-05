@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html class="accueil" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>rendu_liste.html</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div id="app" >
+        <h1 class="titre">{{titre }}</h1>
+    <p>{{ getDate }}</p>
+
+    <table id="table_facture">
+        <thead>
+        <tr>
+            <th>{{ id }}</th>
+            <th>{{ designation }}</th>
+            <th>{{ qte }}</th>
+            <th>{{ pu }}</th>
+            <th>{{ tva }}</th>
+            <th>{{ pht }}</th>
+            <th>{{ pttc }}</th>
+            <th></th>
+
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(item, index) in items" :key="items[index].id" @input="save">
+            <td>{{ items[index].id }}</td>
+            <td><input type="text" v-model="items[index].designation" ></td>
+            <td><input type="number" min="0"  v-model="items[index].qte" @change="calcule(index)"></td>
+            <td><input type="text" v-model="items[index].pu_ht" @change="calcule(index)"></td>
+            <td><input type="number" min="0" max="100" v-model="items[index].tva" @change="calcule(index)"></td>
+            <td>{{ items[index].p_ht + euro}}</td>
+            <td>{{ items[index].p_ttc + euro}}</td>
+            <td><button @click="sup(index)">{{ supprimer }}</button></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <div class="bas">
+        <button class="button button1" @click="add">{{ ajouter }}</button>
+
+
+        <div class="prix">
+            <div class="inner">
+                {{ totalHT + additionHt }}
+            </div>
+        </div>
+        <div class="prix">
+            <div class="inner">
+                {{ totalTtc + additionTtc}}
+            </div>
+        </div>
+
+    </div>
+
+
+    <p class="red">{{ items }}</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script type="text/javascript">
+    function getDate() {
+
+    }
+    let app = new Vue({
+        el: '#app',
+        data: {
+            items : [{"id": this.length + 1  ,"designation":"","qte":"0","pu_ht":"0","tva":"0","p_ht":0,"p_ttc":0}],
+            titre : "Evaluation Vuejs",
+            id : "id",
+            designation : "Designation",
+            qte : "Qte",
+            pu: "Pu Ht",
+            tva : "Tva",
+            pht : "P ht",
+            pttc : "P Ttc",
+            ajouter: "+ Ajouter une ligne",
+            supprimer: "supprimer",
+            totalHT: "Total HT : ",
+            totalTtc: "Total TTC : ",
+            date:"",
+            euro:' €',
+        },
+
+        mounted() {
+
+            if (localStorage.getItem('todolist')) {
+                try {
+                    this.items = JSON.parse(localStorage.getItem('todolist'));
+                } catch(e) {
+                    localStorage.removeItem('todolist');
+                }
+            }
+
+        },
+
+        methods: {
+
+            save:function(event){
+                localStorage.setItem('todolist', JSON.stringify(this.items));
+            },
+
+            add:function(event){
+                this.items.push({"id": this.items[this.items.length - 1]["id"] + 1  ,"designation":"","qte":0,"pu_ht":0,"tva":0,"p_ht":0,"p_ttc":0});
+            },
+            sup:function(event){
+                this.items.splice(event,1);
+            },
+            calcule:function(event) {
+                this.items[event].p_ht = (this.items[event].qte * eval(this.items[event].pu_ht ));
+                this.items[event].p_ttc = ((this.items[event].p_ht * this.items[event].tva /100) + this.items[event].p_ht);
+            },
+
+
+        },
+
+        computed:{
+
+            getDate(){
+
+                let date = new Date();
+                let options = {year: "numeric", month: "long", day: "numeric"};
+                return 'Facture du ' + date.toLocaleDateString('fr-FR', options);
+
+            },
+            additionHt() {
+                let somme=0;
+                for(let i =0 ; i < this.items.length; i++)
+                {
+                    somme = somme + this.items[i].p_ht;
+                }
+                return somme;
+            },
+
+            additionTtc() {
+                let somme=0;
+                for(let i =0 ; i < this.items.length; i++)
+                {
+                    somme = somme + this.items[i].p_ttc;
+                }
+                return somme;
+            },
+
+        },
+        watch:{
+            items:function(){
+                localStorage.setItem('todolist', JSON.stringify(this.items));
+            }
+
+        }
+    });
+
+
+</script>
+</body>
+</html>
